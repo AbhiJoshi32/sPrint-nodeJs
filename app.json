@@ -1,0 +1,7 @@
+{
+  "name": "VPrint",
+  "description": "A online printing app",
+  "repository": "https://github.com/AbhiJoshi32/VPrint",
+  "logo": "https://cdn.rawgit.com/heroku/node-js-getting-started/master/public/node.svg",
+  "keywords": ["print", "express", "printing-app"],
+}

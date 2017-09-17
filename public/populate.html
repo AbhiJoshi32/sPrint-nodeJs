@@ -1,0 +1,40 @@
+<html>
+	<head>	
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/4.2.0/firebase-app.js"></script>
+		<script src="/javascripts/firebaseinit.js" type="text/javascript" charset="utf-8"></script>
+		<script src="https://www.gstatic.com/firebasejs/4.2.0/firebase-auth.js"></script>
+		<script src="https://www.gstatic.com/firebasejs/4.2.0/firebase-database.js"></script>
+		
+	<body>
+		<input type="text" id="binding">
+		<input type="text" id="papertype">
+		<input type="text" id="color">
+		<input type="text" id="file-name">
+		<button type="" id="submit">submit</button>
+		
+		<script type="text/javascript" charset="utf-8">
+		var user = firebase.auth().currentUser;
+		console.log(user);
+		firebase.auth().onAuthStateChanged(
+		function(user) {
+			console.log("State Changed");
+			if(user) {
+				console.log("User email is "+user.email);
+			} 
+			else{
+				localStorage.clear();
+			}
+		});
+
+		$('#submit').click(function(){
+			obj = {"availBinding":["None","Soft","Spiral"],"shopAvailColor":"no","shopAvailPaperType":["A4","A3"],"shopAvailability":"yes","shopCost":{"shopBindingCost":{"softBindingCost":10,"spiralBindingCost":0},"shopColorCost":{"colorA3Cost":0,"colorA4Cost":0,"colorA5Cost":0},"shopGrayscaleCost":{"grayscaleA3Cost":5,"grayscaleA4Cost":2,"grayscaleA5Cost":0}},"shopId":"0P5NmRCzClZjTcUfMQ2f8ihSvfl2","shopLocation":"1045 boys hostel","shopName":"Kamala Xerox"}
+			console.log(obj);
+			refer = firebase.database().ref('shop-client/shop-info');
+			refer.child("0P5NmRCzClZjTcUfMQ2f8ihSvfl2").update(obj);	
+			})
+		
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "689182749470",
+    "firebase_url": "https://vprint-96f75.firebaseio.com",
+    "project_id": "vprint-96f75",
+    "storage_bucket": "vprint-96f75.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:689182749470:android:a14226ff21c1764d",
+        "android_client_info": {
+          "package_name": "com.binktec.vprint"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "689182749470-ms9dadc3ldaslbv7567e15pkn1f2fltu.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.binktec.vprint",
+            "certificate_hash": "f8a2bbac80f453a8d37599faa5a5554717f09efe"
+          }
+        },
+        {
+          "client_id": "689182749470-smnbhhtofvmeepjl41pe2b2u9btga4ao.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBohJT9mSujrUF8uV70otZHGBDQ_FSKm9Q"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "689182749470-smnbhhtofvmeepjl41pe2b2u9btga4ao.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

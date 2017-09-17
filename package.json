@@ -1,0 +1,23 @@
+{
+  "name": "VPrint",
+  "version": "6.11.2",
+  "description": "An application to print",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
+  "engines": {
+    "node": "6.11.2"
+  },
+  "author": "abhishek joshi",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "1.17.2",
+    "connect-firebase": "0.0.9",
+    "express": "4.15.4",
+    "fcm-push": "1.1.2",
+    "firebase-admin": "5.2.1",
+    "request": "2.81.0"
+  }
+}
