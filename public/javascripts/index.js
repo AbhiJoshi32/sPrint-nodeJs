@@ -1,22 +1,17 @@
 var navTemplate;
-var uid;
 var loginKey = "userLoginStatus";
 database = firebase.database();
 firebase.auth().onAuthStateChanged(function(user) {
   if (user) {
   	uid = user.uid;
-  	console.log(uid);
   	shopRef = database.ref('shop-client/shop-info/');
   	shopRef.child(uid).
   		once('value',function(snapshot){
 	  	if(snapshot.val()!=null){
 			localStorage.setItem(loginKey,true);
-	  		console.log("user is shop");
 			getRow();
 	  	}
 	  	else{
-	  		console.log("Normal User");
-	  		
 	  		logout();
 	  		alert("Not a shop User");
 	  	}
@@ -24,22 +19,18 @@ firebase.auth().onAuthStateChanged(function(user) {
   }
   else{
   	localStorage.clear();
-  	console.log("Nobody is logged in");
   	window.location = '/login';
   }
 });
 
 $(document).ready(function(){
-	console.log("the doc is readyy");
 	if (localStorage.getItem(loginKey)) {
-		console.log(localStorage.getItem(loginKey));
 		loadNavbar();
   		$('.body-container').css('visibility','visible');
 	}
 	else {
 		localStorage.clear();
-		console.log("Nobody is logged in");
-  		window.location = '/login';
+		window.location = '/login';
 	}
 });
 
@@ -68,11 +59,11 @@ function getRow(){
 }
 function getShopTransaction() {
 	refString = "printTransaction/"+ uid;
-	console.log("Trying to connect to firebase for");
-	console.log(refString);
 	ref = database.ref('printTransaction/'+uid);
 	ref.on("value",function(snapshot) {
 		if (snapshot.val()) {
+			console.log("value changed");
+			alert("change Occurred");
 			updateRows(snapshot.val());
 		}
 		else {
@@ -80,120 +71,118 @@ function getShopTransaction() {
 		}
 	});
 }
-var reqid;
-var token;
+
 function updateRows(snapshot) {
-	console.log("the snapshop recied is "+snapshot);
+	// console.log("the snapshop recied is "+snapshot);
 	reqHtml = "";
 	pendingHtml = "";
 	tempNavTemplate = $.parseHTML(navTemplate);
-	console.log(snapshot.key);
+	// console.log(snapshot.key);
 
 	for(snap in snapshot) {
 		tempNavTemplate = $.parseHTML(navTemplate);
-		console.log(snap);
 		obj = snapshot[snap]["printTransaction"];
 		snapFile = obj['fileDetails'];
-		reqid = obj['uid'];
-		snapBindingCost = snapshot[snap]['bindingCost'];
-		snapPrintCost = snapshot[snap]['printCost'];		
+		snapUserId = snapshot[snap]['user']['uid'];
+		snapBindingCost = obj['bindingCost'];
+		snapPrintCost = obj['printCost'];		
 		snapTotalCost = snapPrintCost + snapBindingCost;
-		console.log(snapFile);
 		snapStatus = snapshot[snap]['status'];
-		snapOrientation = obj['printOrientation'];
+		snapOrientation = obj['printDetail']['printOrientation'];
 		snapBinding = obj['printDetail']['bindingType'];
 		snapColor = obj['printDetail']['printColor'];
 		snapPaperType = obj['printDetail']['printPaperType'];
-		snapNoCopies = obj['printDetail']['printCopies'];
+		snapNoCopies = obj['printDetail']['copies'];
 		snapSided = obj['printDetail']['pagesPerSheet'];
 		snapToken =snapshot[snap]['user']['requestToken'];
+		snapPagesText = obj['printDetail']['pagesText'];
+		snapTotalPages = obj['printDetail']['pagesToPrint'];
 		ul = "<ul>";
 		for (file in snapFile) {
-			console.log(snapFile[file]);
 			ul+=("<li><a href=" + snapFile[file]['downloadUrl']+">"+snapFile[file]['filename']+"</a></li>");
 		}
 		ul+="</ul>";
-		console.log(snapFile,snapStatus,snapBinding,snapColor);
-		$(tempNavTemplate).find('.total-pages').html()
+		// console.log(snapFile,snapStatus,snapBinding,snapColor);
+		$(tempNavTemplate).find('.total-pages').html(snapTotalPages)
 		$(tempNavTemplate).find('.file-list').html(ul)
 		$(tempNavTemplate).find('.type').html(snapPaperType);
 		$(tempNavTemplate).find('.color').html(snapColor);
 		$(tempNavTemplate).find('.binding').html(snapBinding);
 		$(tempNavTemplate).find('.cost').html(snapTotalCost);
+		$(tempNavTemplate).find('.copies').html(snapNoCopies);
+		$(tempNavTemplate).find('.sided').html(snapSided);
+		$(tempNavTemplate).find('.pages').html(snapPagesText);
 		$(tempNavTemplate).find('.orientation').html(snapOrientation);
 		if(snapStatus=="Waiting"){
-			console.log("The requeted token is "+snapToken);
-			$(tempNavTemplate).find('.confirm').attr("data-token",snapToken).attr("id",snap).addClass("reqConfirm").attr("tokenId",);
-			$(tempNavTemplate).find('.reject').attr("id",snap).attr("data-token",snapToken).addClass("reqReject");
-			reqHtml = tempNavTemplate[0].innerHTML + reqHtml;
+			// console.log("The requeted token is "+snapToken);
+			$(tempNavTemplate).find('.confirm').attr("data-token",snapToken).attr("id",snap).attr("data-userid",snapUserId).addClass("reqConfirm").attr("tokenId",);
+			$(tempNavTemplate).find('.reject').attr("id",snap).attr("data-token",snapToken).attr("data-userid",snapUserId).addClass("reqReject");
+			reqHtml += tempNavTemplate[0].innerHTML;
 		}
 		else if(snapStatus=="Printing"){
-			$(tempNavTemplate).find('.confirm').attr("id",snap).attr("data-token",snapToken).addClass("printConfirm");
-			$(tempNavTemplate).find('.reject').attr("id",snap).attr("data-token",snapToken).addClass("printReject");
-			pendingHtml = tempNavTemplate[0].innerHTML + pendingHtml;
-		}
-	
+			$(tempNavTemplate).find('.confirm').attr("id",snap).attr("data-token",snapToken).attr("data-userid",snapUserId).addClass("printConfirm");
+			$(tempNavTemplate).find('.reject').attr("id",snap).attr("data-token",snapToken).attr("data-userid",snapUserId).addClass("printReject");
+			pendingHtml += tempNavTemplate[0].innerHTML;
+		}	
 	}
 	$('.req-content').html(reqHtml);
 	$('.pend-content').html(pendingHtml);
 	$('.reqConfirm').click(function() {
 		nodeObj= {};
-		nodeObj['token'] = $('.reqConfirm').data("token");
+		nodeObj['token'] = $(this).data("token");
+		userId = $(this).data("userid");
 		nodeObj['message'] = "Print Confirmed";
-		console.log("node obj is");
-		console.log(nodeObj);
+		// console.log("node obj is");
+		// console.log(nodeObj);
 		database.ref('notification/').push(nodeObj);
 		updates={};
 		updates['status'] = "Printing";
 		database.ref('printTransaction/'+uid+'/'+this.id).update(updates);
-		database.ref('userTransaction/'+reqid+'/'+this.id).update(updates);
+		database.ref('userTransaction/'+userId+'/'+this.id).update(updates);
 	});
 
 	$('.reqReject').click(function() {
 		nodeObj= {};
-		nodeObj['token'] = $('.reqReject').data("token");
+		nodeObj['token'] = $(this).data("token");
+		userId = $(this).data("userid");
 		nodeObj['message'] = "Print Cancelled";
-		console.log("node obj is");
-		console.log(nodeObj);
 		database.ref('notification/').push(nodeObj);
 		updates={};
 		updates['status'] = "Cancelled";
 		database.ref('printTransaction/'+uid+'/'+this.id).update(updates);
-		database.ref('userTransaction/'+reqid+'/'+this.id).update(updates);
+		database.ref('userTransaction/'+userId+'/'+this.id).update(updates);
 	});
 
 	$('.printReject').click(function() {
 		nodeObj= {};
-		nodeObj['token'] = $('.printReject').data("token");
+		nodeObj['token'] = $(this).data("token");
+		userId = $(this).data("userid");
 		nodeObj['message'] = "Print Cancelled";
-		console.log("node obj is");
-		console.log(nodeObj);
 		database.ref('notification/').push(nodeObj);
 		updates={};
 		updates['status'] = "Cancelled";
 		database.ref('printTransaction/'+uid+'/'+this.id).update(updates);
-		database.ref('userTransaction/'+reqid+'/'+this.id).update(updates);
+		database.ref('userTransaction/'+userId+'/'+this.id).update(updates);
 	});
 	$('.printConfirm').click(function() {
 		nodeObj= {};
-		nodeObj['token'] = $('.printConfirm').data("token");
+		nodeObj['token'] = $(this).data("token");
+		userId = $(this).data("userid");
 		nodeObj['message'] = "Print Completed";
-		console.log("node obj is");
-		console.log(nodeObj);
-		ref = database.ref('transactions/'+uid+'/'+this.id);
+		database.ref('notification/').push(nodeObj);
 		updates={};
 		updates['status'] = "Printed";
 		database.ref('printTransaction/'+uid+'/'+this.id).update(updates);
-		database.ref('userTransaction/'+reqid+'/'+this.id).update(updates);
+		database.ref('userTransaction/'+userId+'/'+this.id).update(updates);
 	});
 }
 
 function logout(){
 	firebase.auth().signOut().then(function() {
-	 console.log("Logout Successful");
+	 // console.log("Logout Successful");
 	 localStorage.clear();
 	 window.location = "/login"
 	 }).catch(function(error) {
-	  console.log("Logout Unsuccessful");
+	  // console.log("Logout Unsuccessful");
 	});
 }
