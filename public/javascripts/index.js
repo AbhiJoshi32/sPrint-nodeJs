@@ -23,6 +23,10 @@ firebase.auth().onAuthStateChanged(function(user) {
   }
 });
 
+function playNotification() {
+	$("#my_audio").get(0).play();
+}
+
 $(document).ready(function(){
 	if (localStorage.getItem(loginKey)) {
 		loadNavbar();
@@ -63,12 +67,15 @@ function getShopTransaction() {
 	ref.on("value",function(snapshot) {
 		if (snapshot.val()) {
 			console.log("value changed");
-			alert("change Occurred");
 			updateRows(snapshot.val());
 		}
 		else {
 			$('.req-content').html("");
+			$('.pend-content').html("")
 		}
+	});
+	ref.on("child_added", function(snapshot, prevChildKey) {
+		playNotification();
 	});
 }
 
