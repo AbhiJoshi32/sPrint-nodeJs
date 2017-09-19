@@ -152,24 +152,32 @@ function updateRows(snapshot) {
 		nodeObj= {};
 		nodeObj['token'] = $(this).data("token");
 		userId = $(this).data("userid");
-		nodeObj['message'] = "Print Cancelled";
+		nodeObj['message'] = "Print Rejected";
 		database.ref('notification/').push(nodeObj);
 		updates={};
-		updates['status'] = "Cancelled";
-		database.ref('printTransaction/'+uid+'/'+this.id).update(updates);
-		database.ref('userTransaction/'+userId+'/'+this.id).update(updates);
+		updates['status'] = "Rejected";
+		database.ref('userTransaction/'+uid+'/'+this.id).once("value",
+			function(snapshot){	
+				database.ref('printCompleted/'+uid+'/'+this.id).set(snapshot.val());
+				database.ref('userCompleted/'+userId+'/'+this.id).set(snapshot.val());			
+			});
+		database.ref('printTransaction/'+uid+'/'+this.id).set("");
+		database.ref('userTransaction/'+userId+'/'+this.id).set("");
+	
 	});
 
 	$('.printReject').click(function() {
 		nodeObj= {};
 		nodeObj['token'] = $(this).data("token");
 		userId = $(this).data("userid");
-		nodeObj['message'] = "Print Cancelled";
+		nodeObj['message'] = "Print Rejected";
 		database.ref('notification/').push(nodeObj);
 		updates={};
-		updates['status'] = "Cancelled";
-		database.ref('printTransaction/'+uid+'/'+this.id).update(updates);
-		database.ref('userTransaction/'+userId+'/'+this.id).update(updates);
+		updates['status'] = "Rejected";
+		database.ref('printTransaction/'+uid+'/'+this.id).set("");
+		database.ref('userTransaction/'+userId+'/'+this.id).set("");
+		database.ref('printCompleted/'+uid+'/'+this.id).update(updates);
+		database.ref('userCompleted/'+userId+'/'+this.id).update(updates);
 	});
 	$('.printConfirm').click(function() {
 		nodeObj= {};
@@ -179,8 +187,8 @@ function updateRows(snapshot) {
 		database.ref('notification/').push(nodeObj);
 		updates={};
 		updates['status'] = "Printed";
-		database.ref('printTransaction/'+uid+'/'+this.id).update(updates);
-		database.ref('userTransaction/'+userId+'/'+this.id).update(updates);
+		database.ref('printCompleted/'+uid+'/'+this.id).update(updates);
+		database.ref('userCompleted/'+userId+'/'+this.id).update(updates);
 	});
 }
 

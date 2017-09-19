@@ -32,7 +32,7 @@ app.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));
 });
 
-
+var shopObj = {};
 var firebase = require('firebase-admin');
 var request = require('request');
 
@@ -90,5 +90,41 @@ function sendNotificationToUser(token, message, onSuccess) {
   });
 }
 
-// start listening
+function listenForQueueChanges(shopId) {
+  var requests = ref.child('printTransaction/' + shopId);
+  requests.on('child_added', function(requestSnapshot) { 
+    queueLength = shopObj[shopId]["queueLength"] + 1;
+    shopObj[shopId]["queueLength"] = queueLength;
+    updateQueue(shopId);
+  }, function(error) {
+    console.error(error);
+  });
+
+  requests.on('child_removed', function(requestSnapshot) {
+    queueLength = shopObj[shopId]["queueLength"]-1;
+    shopObj[shopId]["queueLength"] = queueLength;
+    updateQueue(shopId);
+  }, function(error) {
+    console.error(error);
+  });
+};
+
+function updateQueue(shopId) {
+  var shopRef = ref.child('shop-client/shop-info/' + shopId + "/shopQueue");
+  shopRef.set(shopObj[shopId]["queueLength"]);
+  
+}
+
+function getShopList() {
+  var shopRef = ref.child('shop-client/shop-info/');
+  shopRef.once('value').then(
+    function(requestSnapshot) {
+      for (shopId in requestSnapshot.val()) {
+        shopObj[shopId] = {"queueLength":0};
+        listenForQueueChanges(shopId);
+      }
+  });
+}
+
+getShopList();
 listenForNotificationRequests();
