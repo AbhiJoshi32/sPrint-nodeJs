@@ -142,53 +142,73 @@ function updateRows(snapshot) {
 		// console.log("node obj is");
 		// console.log(nodeObj);
 		database.ref('notification/').push(nodeObj);
+		var transactionId = this.id;
 		updates={};
 		updates['status'] = "Printing";
-		database.ref('printTransaction/'+uid+'/'+this.id).update(updates);
-		database.ref('userTransaction/'+userId+'/'+this.id).update(updates);
+		database.ref('printTransaction/'+uid+'/'+transactionId).update(updates);
+		database.ref('userTransaction/'+userId+'/'+transactionId).update(updates);
 	});
 
 	$('.reqReject').click(function() {
 		nodeObj= {};
+		var transactionId = this.id;
 		nodeObj['token'] = $(this).data("token");
 		userId = $(this).data("userid");
 		nodeObj['message'] = "Print Rejected";
 		database.ref('notification/').push(nodeObj);
-		updates={};
-		updates['status'] = "Rejected";
-		database.ref('userTransaction/'+uid+'/'+this.id).once("value",
-			function(snapshot){	
-				database.ref('printCompleted/'+uid+'/'+this.id).set(snapshot.val());
-				database.ref('userCompleted/'+userId+'/'+this.id).set(snapshot.val());			
+		database.ref('userTransaction/'+userId+'/'+transactionId).once("value",
+			function(snapshot){
+				console.log("uid is " + uid+" userId is " + userId + " transaction id is " + transactionId);
+				transaction = snapshot.val();
+				console.log(transaction);
+				transaction["status"] = "Rejected";
+				database.ref('userCompleted/'+userId+'/'+transactionId).set(transaction);
+				transaction["printTransaction"]["shop"] = null;
+				database.ref('printCompleted/'+uid+'/'+transactionId).set(transaction);
+				database.ref('printTransaction/'+uid+'/'+transactionId).set(null);
+				database.ref('userTransaction/'+userId+'/'+transactionId).set(null);
 			});
-		database.ref('printTransaction/'+uid+'/'+this.id).set("");
-		database.ref('userTransaction/'+userId+'/'+this.id).set("");
-	
 	});
 
 	$('.printReject').click(function() {
+		var transactionId = this.id;
 		nodeObj= {};
 		nodeObj['token'] = $(this).data("token");
 		userId = $(this).data("userid");
 		nodeObj['message'] = "Print Rejected";
 		database.ref('notification/').push(nodeObj);
-		updates={};
-		updates['status'] = "Rejected";
-		database.ref('printTransaction/'+uid+'/'+this.id).set("");
-		database.ref('userTransaction/'+userId+'/'+this.id).set("");
-		database.ref('printCompleted/'+uid+'/'+this.id).update(updates);
-		database.ref('userCompleted/'+userId+'/'+this.id).update(updates);
+		database.ref('userTransaction/'+userId+'/'+transactionId).once("value",
+			function(snapshot){
+				console.log("uid is " + uid+" userId is " + userId + " transaction id is " + transactionId);
+				transaction = snapshot.val();
+				transaction["status"] = "Rejected";
+				database.ref('userCompleted/'+userId+'/'+transactionId).set(transaction);
+				transaction["printTransaction"]["shop"] = null;
+				database.ref('printCompleted/'+uid+'/'+transactionId).set(transaction);
+				database.ref('printTransaction/'+uid+'/'+transactionId).set(null);
+				database.ref('userTransaction/'+userId+'/'+transactionId).set(null);
+			});
 	});
+	
 	$('.printConfirm').click(function() {
+		transactionId = this.id;
 		nodeObj= {};
 		nodeObj['token'] = $(this).data("token");
 		userId = $(this).data("userid");
 		nodeObj['message'] = "Print Completed";
 		database.ref('notification/').push(nodeObj);
-		updates={};
-		updates['status'] = "Printed";
-		database.ref('printCompleted/'+uid+'/'+this.id).update(updates);
-		database.ref('userCompleted/'+userId+'/'+this.id).update(updates);
+		database.ref('userTransaction/'+userId+'/'+transactionId).once("value",
+			function(snapshot){
+				console.log("uid is " + uid+" userId is " + userId + " transaction id is " + transactionId);
+				transaction = snapshot.val();
+				console.log(transactionId);
+				transaction["status"] = "Printed";
+				database.ref('userCompleted/'+userId+'/'+transactionId).set(transaction);
+				transaction["printTransaction"]["shop"] = null;
+				database.ref('printCompleted/'+uid+'/'+transactionId).set(transaction);
+				database.ref('printTransaction/'+uid+'/'+transactionId).set(null);
+				database.ref('userTransaction/'+userId+'/'+transactionId).set(null);
+			});
 	});
 }
 
