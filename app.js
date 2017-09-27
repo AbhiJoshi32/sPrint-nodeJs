@@ -30,6 +30,9 @@ app.get('/history', function(request, response) {
   response.sendFile(__dirname + '/public/history.html');
 });
 
+app.get('/privacypolicy', function(request, response) {
+  response.sendFile(__dirname + '/public/privacypolicy.html');
+});
 
 
 app.listen(app.get('port'), function() {
