@@ -1,5 +1,8 @@
 var navTemplate;
+var pin;
 var loginKey = "userLoginStatus";
+var onGoingObj;
+var uid;
 database = firebase.database();
 firebase.auth().onAuthStateChanged(function(user) {
   if (user) {
@@ -10,6 +13,8 @@ firebase.auth().onAuthStateChanged(function(user) {
 	  	if(snapshot.val()!=null){
 			localStorage.setItem(loginKey,true);
 			getRow();
+			getShopTransaction();
+			getPin();
 	  	}
 	  	else{
 	  		logout();
@@ -30,7 +35,7 @@ function playNotification() {
 $(document).ready(function(){
 	if (localStorage.getItem(loginKey)) {
 		loadNavbar();
-  		$('.body-container').css('visibility','visible');
+  		$('.body').css('visibility','visible');
 	}
 	else {
 		localStorage.clear();
@@ -58,16 +63,18 @@ function getRow(){
   		url: "html-snippets/req-row-snippet.html"
 	}).done(function(data) {
 		navTemplate = data;
-		getShopTransaction();
+		updateRows();
   });
 }
+
 function getShopTransaction() {
 	refString = "printTransaction/"+ uid;
 	ref = database.ref('printTransaction/'+uid);
 	ref.on("value",function(snapshot) {
 		if (snapshot.val()) {
+			onGoingObj = snapshot.val();
 			console.log("value changed");
-			updateRows(snapshot.val());
+			updateRows();
 		}
 		else {
 			$('.req-content').html("");
@@ -79,29 +86,39 @@ function getShopTransaction() {
 	});
 }
 
-function updateRows(snapshot) {
+function getPin() {
+	refString = "shop-client/shop-info/"+ uid + "/shopPrinted";
+	ref = database.ref(refString);
+	ref.once("value",function(snapshot) {
+		console.log("pin is"+snapshot.val() + "for" + refString);
+		pin = snapshot.val();
+		
+	});
+}
+
+function updateRows() {
 	// console.log("the snapshop recied is "+snapshot);
 	reqHtml = "";
 	pendingHtml = "";
 	tempNavTemplate = $.parseHTML(navTemplate);
 	// console.log(snapshot.key);
 
-	for(snap in snapshot) {
+	for(snap in onGoingObj) {
 		tempNavTemplate = $.parseHTML(navTemplate);
-		obj = snapshot[snap]["printTransaction"];
+		obj = onGoingObj[snap]["printTransaction"];
 		snapFile = obj['fileDetails'];
-		snapUserId = snapshot[snap]['user']['uid'];
+		snapUserId = onGoingObj[snap]['user']['uid'];
 		snapBindingCost = obj['bindingCost'];
 		snapPrintCost = obj['printCost'];		
 		snapTotalCost = snapPrintCost + snapBindingCost;
-		snapStatus = snapshot[snap]['status'];
+		snapStatus = onGoingObj[snap]['status'];
 		snapOrientation = obj['printDetail']['printOrientation'];
 		snapBinding = obj['printDetail']['bindingType'];
 		snapColor = obj['printDetail']['printColor'];
 		snapPaperType = obj['printDetail']['printPaperType'];
 		snapNoCopies = obj['printDetail']['copies'];
 		snapSided = obj['printDetail']['pagesPerSheet'];
-		snapToken =snapshot[snap]['user']['requestToken'];
+		snapToken =onGoingObj[snap]['user']['requestToken'];
 		snapPagesText = obj['printDetail']['pagesText'];
 		snapTotalPages = obj['printDetail']['pagesToPrint'];
 		ul = "<ul>";
@@ -201,8 +218,11 @@ function updateRows(snapshot) {
 			function(snapshot){
 				console.log("uid is " + uid+" userId is " + userId + " transaction id is " + transactionId);
 				transaction = snapshot.val();
-				console.log(transactionId);
 				transaction["status"] = "Printed";
+				console.log(pin);
+				pin = pin+1;
+				database.ref('shop-client/shop-info/' + uid + "/shopPrinted").set(pin);
+				transaction["pin"] = pin;
 				database.ref('userCompleted/'+userId+'/'+transactionId).set(transaction);
 				transaction["printTransaction"]["shop"] = null;
 				database.ref('printCompleted/'+uid+'/'+transactionId).set(transaction);

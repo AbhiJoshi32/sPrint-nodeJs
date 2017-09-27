@@ -26,6 +26,10 @@ app.get('/login', function(request, response) {
 	response.sendFile(__dirname + '/public/login.html');
 });
 
+app.get('/history', function(request, response) {
+  response.sendFile(__dirname + '/public/history.html');
+});
+
 
 
 app.listen(app.get('port'), function() {
@@ -92,14 +96,13 @@ function sendNotificationToUser(token, message, onSuccess) {
 
 function listenForQueueChanges(shopId) {
   var requests = ref.child('printTransaction/' + shopId);
-  requests.on('child_added', function(requestSnapshot) { 
+  requests.on('child_added', function(requestSnapshot) {
     queueLength = shopObj[shopId]["queueLength"] + 1;
     shopObj[shopId]["queueLength"] = queueLength;
     updateQueue(shopId);
   }, function(error) {
     console.error(error);
   });
-
   requests.on('child_removed', function(requestSnapshot) {
     queueLength = shopObj[shopId]["queueLength"]-1;
     shopObj[shopId]["queueLength"] = queueLength;
@@ -107,7 +110,7 @@ function listenForQueueChanges(shopId) {
   }, function(error) {
     console.error(error);
   });
-};
+}
 
 function updateQueue(shopId) {
   var shopRef = ref.child('shop-client/shop-info/' + shopId + "/shopQueue");
@@ -126,5 +129,28 @@ function getShopList() {
   });
 }
 
+
+function setDayEndTimer() {
+  var now = new Date();
+  var millisTill10 = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0) - now;
+  if (millisTill10 < 0) {
+     millisTill10 += 86400000; // it's after 10am, try 10am tomorrow.
+  }
+  setTimeout(function (){
+      var shopRef = ref.child('shop-client/shop-info/');
+      shopRef.once('value').then(
+        function(requestSnapshot) {
+          for (shopId in requestSnapshot.val()) {
+            var shopRef = ref.child('shop-client/shop-info/' + shopId + "/shopPrinted");
+            shopRef.set(0);
+          }
+      });
+    }
+  , millisTill10);
+}
+
+
+
 getShopList();
 listenForNotificationRequests();
+setDayEndTimer();

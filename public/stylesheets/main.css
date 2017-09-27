@@ -79,7 +79,16 @@ body {
   margin-bottom: 10px;
 }
 
-.body-container{
+.body{
   visibility: hidden;
 }
 
+.label{
+  color:blue;
+  font-size: 18px;
+}
+
+.history-row{
+  margin-top: 15px;
+  margin-bottom: 15px;
+}
