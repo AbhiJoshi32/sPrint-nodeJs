@@ -3,6 +3,11 @@ var pin;
 var loginKey = "userLoginStatus";
 var onGoingObj;
 var uid;
+var loginKey = "userLoginStatus";
+var shopNameKey = "shop name";
+var shopIdKey = "shop id";
+var month_names_short= ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 database = firebase.database();
 firebase.auth().onAuthStateChanged(function(user) {
   if (user) {
@@ -11,7 +16,10 @@ firebase.auth().onAuthStateChanged(function(user) {
   	shopRef.child(uid).
   		once('value',function(snapshot){
 	  	if(snapshot.val()!=null){
-			localStorage.setItem(loginKey,true);
+	  		localStorage.setItem(loginKey,true);
+			localStorage.setItem(shopIdKey,uid);
+			localStorage.setItem(shopNameKey,snapshot.val()["shopName"]);
+	 		database.ref('shop-client/shop-info/' + uid + "/shopAvailability").set("yes");
 			getRow();
 			getShopTransaction();
 			getPin();
@@ -36,6 +44,8 @@ $(document).ready(function(){
 	if (localStorage.getItem(loginKey)) {
 		loadNavbar();
   		$('.body').css('visibility','visible');
+  		var shopName = localStorage.getItem(shopNameKey);
+  		$('.shop-name').html(shopName);
 	}
 	else {
 		localStorage.clear();
@@ -208,6 +218,30 @@ function updateRows() {
 	});
 	
 	$('.printConfirm').click(function() {
+		var d = new Date();
+		var dd = d.getDate();
+		var mm = d.getMonth()+1; //January is 0!
+
+		var yyyy = d.getFullYear();
+		if(dd<10){
+		    dd='0'+dd;
+		} 
+
+		var printDate = dd + "/" + month_names_short[d.getMonth()] +"/"+ yyyy;
+		hour = d.getHours();
+		if (hour<10) {
+			hour = "0" + hour;
+		}
+		minutes = d.getMinutes();
+		if (minutes<10) {
+			minutes = "0" + minutes;
+		}
+		seconds = d.getSeconds();
+		if (seconds<10) {
+			seconds = "0" + seconds;
+		}
+		var printTime = hour + ":" + minutes + ":" + seconds;
+
 		transactionId = this.id;
 		nodeObj= {};
 		nodeObj['token'] = $(this).data("token");
@@ -219,7 +253,8 @@ function updateRows() {
 				console.log("uid is " + uid+" userId is " + userId + " transaction id is " + transactionId);
 				transaction = snapshot.val();
 				transaction["status"] = "Printed";
-				console.log(pin);
+				transaction["confirmedDate"] = printDate;
+				transaction["completedTime"] = printTime;
 				pin = pin+1;
 				database.ref('shop-client/shop-info/' + uid + "/shopPrinted").set(pin);
 				transaction["pin"] = pin;
@@ -236,6 +271,7 @@ function logout(){
 	firebase.auth().signOut().then(function() {
 	 // console.log("Logout Successful");
 	 localStorage.clear();
+	 database.ref('shop-client/shop-info/' + uid + "/shopAvailability").set("no");
 	 window.location = "/login"
 	 }).catch(function(error) {
 	  // console.log("Logout Unsuccessful");
