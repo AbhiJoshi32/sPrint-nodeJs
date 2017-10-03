@@ -3,6 +3,7 @@ var historyObj;
 var loginKey = "userLoginStatus";
 var shopNameKey = "shop name";
 var shopIdKey = "shop id";
+var localHistory = "local history";
 database = firebase.database();
 firebase.auth().onAuthStateChanged(function(user) {
   if (user) {
@@ -14,7 +15,8 @@ firebase.auth().onAuthStateChanged(function(user) {
 			localStorage.setItem(loginKey,true);
 			localStorage.setItem(shopIdKey,uid);
 			localStorage.setItem(shopNameKey,snapshot.val()["shopName"]);
-			getRow();
+			database.ref('shop-client/shop-info/' + uid + "/shopAvailability").set("yes");
+	 		database.ref('shop-client/shop-info/' + uid + "/shopAvailability").onDisconnect().set("no");
 			getShopHistory();
 	  	}
 	  	else{
@@ -31,8 +33,11 @@ firebase.auth().onAuthStateChanged(function(user) {
 
 $(document).ready(function(){
 	if (localStorage.getItem(loginKey)) {
+		historyObj = JSON.parse(localStorage.getItem(localHistory));
+		console.log(historyObj);
 		loadNavbar();
-  		$('.body').css('visibility','visible');
+		getRow();
+		$('.body').css('visibility','visible');
   		var shopName = localStorage.getItem(shopNameKey);
   		$('.shop-name').html(shopName);
 	}
@@ -75,6 +80,8 @@ function getShopHistory() {
 		if (snapshot.val()) {
 			console.log("value changed");
 			historyObj = snapshot.val();
+			localStorage.setItem(localHistory,JSON.stringify(historyObj));
+			console.log(localStorage.getItem(localHistory));
 			updateRows();
 		}
 		else {
@@ -85,23 +92,36 @@ function getShopHistory() {
 }
 
 function updateRows() {
-	// console.log("the snapshop recied is "+snapshot);
 	historyHtml = "";
-	// console.log(snapshot.key);
-	for(snap in historyObj) {
-		tempNavTemplate = $.parseHTML(rowTemplate);
-		obj = historyObj[snap]["printTransaction"];
-		snapDate = historyObj[snap]['issuedDate'];
-		snapPin = historyObj[snap]['pin'];
-		snapEmail = historyObj[snap]['user']['emailId'];
-		snapPrintCost = obj['printCost'];
-		snapBindCost = obj['bindingCost'];
-		totalCost = snapPrintCost + snapBindCost;
-		$(tempNavTemplate).find('.date').html(snapDate);
-		$(tempNavTemplate).find('.pin').html(snapPin);
-		$(tempNavTemplate).find('.email').html(snapEmail);
-		$(tempNavTemplate).find('.cost').html(totalCost);
-		historyHtml = tempNavTemplate[0].innerHTML + historyHtml;
+	if (rowTemplate != null) {
+		for(snap in historyObj) {
+			tempNavTemplate = $.parseHTML(rowTemplate);
+			obj = historyObj[snap]["printTransaction"];
+			snapDate = historyObj[snap]['issuedDate'];
+			snapTime = historyObj[snap]['issuedTime'];
+			snapPin = historyObj[snap]['pin'];
+			snapEmail = historyObj[snap]['user']['emailId'];
+			snapPrintCost = obj['printCost'];
+			snapBindCost = obj['bindingCost'];
+			totalCost = snapPrintCost + snapBindCost;
+			$(tempNavTemplate).find('.time').html(snapTime);
+			$(tempNavTemplate).find('.date').html(snapDate);
+			$(tempNavTemplate).find('.pin').html(snapPin);
+			$(tempNavTemplate).find('.email').html(snapEmail);
+			$(tempNavTemplate).find('.cost').html(totalCost);
+			if (historyObj[snap]['status']!="Cancelled") {
+				historyHtml = tempNavTemplate[0].innerHTML + historyHtml;
+			}
+		}
+		$('.history-content').html(historyHtml);
 	}
-	$('.history-content').html(historyHtml);
+}
+
+function logout(){
+	firebase.auth().signOut().then(function() {
+	 localStorage.clear();
+	 database.ref('shop-client/shop-info/' + uid + "/shopAvailability").set("no");
+	 window.location = "/login"
+	 }).catch(function(error) {
+	});
 }

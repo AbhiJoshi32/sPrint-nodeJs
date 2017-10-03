@@ -34,7 +34,6 @@ app.get('/privacypolicy', function(request, response) {
   response.sendFile(__dirname + '/public/privacypolicy.html');
 });
 
-
 app.listen(app.get('port'), function() {
   console.log('Node app is running on port', app.get('port'));
 });

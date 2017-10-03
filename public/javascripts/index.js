@@ -20,6 +20,7 @@ firebase.auth().onAuthStateChanged(function(user) {
 			localStorage.setItem(shopIdKey,uid);
 			localStorage.setItem(shopNameKey,snapshot.val()["shopName"]);
 	 		database.ref('shop-client/shop-info/' + uid + "/shopAvailability").set("yes");
+	 		database.ref('shop-client/shop-info/' + uid + "/shopAvailability").onDisconnect().setValue("no")
 			getRow();
 			getShopTransaction();
 			getPin();
@@ -102,7 +103,6 @@ function getPin() {
 	ref.once("value",function(snapshot) {
 		console.log("pin is"+snapshot.val() + "for" + refString);
 		pin = snapshot.val();
-		
 	});
 }
 
